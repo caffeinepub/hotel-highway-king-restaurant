@@ -1,9 +1,6 @@
-import { createRoute } from "@tanstack/react-router";
-import { Route as RootRoute } from "./__root";
+import { createFileRoute } from "@tanstack/react-router";
 import { CartPage } from "@/components/pages/CartPage";
 
-export const Route = createRoute({
-  getParentRoute: () => RootRoute,
-  path: "/cart",
+export const Route = createFileRoute("/cart")({
   component: CartPage,
 });

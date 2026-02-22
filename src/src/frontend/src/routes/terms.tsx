@@ -1,9 +1,6 @@
-import { createRoute } from "@tanstack/react-router";
-import { Route as RootRoute } from "./__root";
+import { createFileRoute } from "@tanstack/react-router";
 import { TermsPage } from "@/components/pages/TermsPage";
 
-export const Route = createRoute({
-  getParentRoute: () => RootRoute,
-  path: "/terms",
+export const Route = createFileRoute("/terms")({
   component: TermsPage,
 });

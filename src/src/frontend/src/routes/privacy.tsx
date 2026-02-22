@@ -1,9 +1,6 @@
-import { createRoute } from "@tanstack/react-router";
-import { Route as RootRoute } from "./__root";
+import { createFileRoute } from "@tanstack/react-router";
 import { PrivacyPage } from "@/components/pages/PrivacyPage";
 
-export const Route = createRoute({
-  getParentRoute: () => RootRoute,
-  path: "/privacy",
+export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
 });

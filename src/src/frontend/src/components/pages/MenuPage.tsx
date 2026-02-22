@@ -1,15 +1,18 @@
 import { useState, useRef, useEffect } from "react";
 import { useMenuItems, useAddToCart } from "@/hooks/useQueries";
 import { useActor } from "@/hooks/useActor";
+import { useInternetIdentity } from "@/hooks/useInternetIdentity";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Search, Plus, Phone, MapPin, Clock, ChevronUp } from "lucide-react";
+import { Search, Plus, Phone, MapPin, Clock, ChevronUp, Database } from "lucide-react";
 import { Category } from "@/backend.d";
 import type { MenuItem } from "@/backend.d";
+import type { Backend } from "@/backend";
+import { seedMenuItems } from "@/utils/seedMenu";
 
 const categoryLabels: Record<Category, string> = {
   [Category.indianMainCourse]: "Indian Main Course",
@@ -49,11 +52,13 @@ const categories: Category[] = [
 
 export function MenuPage() {
   const { actor, isFetching: actorFetching } = useActor();
+  const { loginStatus } = useInternetIdentity();
   const { data: menuItems = [], isLoading, error } = useMenuItems();
   const addToCart = useAddToCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [showQuickJump, setShowQuickJump] = useState(false);
   const [currentHeroImage, setCurrentHeroImage] = useState(0);
+  const [isSeeding, setIsSeeding] = useState(false);
   
   const categoryRefs = useRef<Record<Category, HTMLElement | null>>({} as any);
   
@@ -126,6 +131,34 @@ export function MenuPage() {
           description: "Please login first to add items to cart.",
         });
       }
+    }
+  };
+
+  const handleSeedMenu = async () => {
+    if (!actor) {
+      toast.error("Backend not ready");
+      return;
+    }
+
+    setIsSeeding(true);
+    try {
+      const result = await seedMenuItems(actor as Backend);
+      if (result.success) {
+        toast.success("Menu seeded!", {
+          description: result.message,
+        });
+        // Refresh page to show new items
+        window.location.reload();
+      } else {
+        toast.error("Seed failed", {
+          description: result.message,
+        });
+      }
+    } catch (error) {
+      toast.error("Error seeding menu");
+      console.error(error);
+    } finally {
+      setIsSeeding(false);
     }
   };
 
@@ -344,6 +377,31 @@ export function MenuPage() {
       {/* Find Us Section */}
       <section className="py-12 md:py-16 bg-muted/30">
         <div className="container mx-auto px-4">
+          {/* Admin Seed Button (hidden, only shows when no menu items) */}
+          {loginStatus === "success" && menuItems.length === 0 && !isLoading && (
+            <div className="max-w-2xl mx-auto mb-12">
+              <Card className="border-dashed border-2 border-primary/50 bg-primary/5">
+                <CardContent className="p-6 text-center">
+                  <Database className="w-12 h-12 mx-auto mb-4 text-primary" />
+                  <h3 className="font-display font-bold text-xl mb-2">
+                    No Menu Items Found
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Seed the database with 45+ dishes and AI-generated images
+                  </p>
+                  <Button
+                    onClick={handleSeedMenu}
+                    disabled={isSeeding}
+                    size="lg"
+                    className="w-full md:w-auto"
+                  >
+                    {isSeeding ? "Seeding..." : "Seed Menu Items"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           <div className="max-w-4xl mx-auto">
             <h2 className="font-display font-bold text-3xl md:text-4xl text-center mb-8">
               Find Us
